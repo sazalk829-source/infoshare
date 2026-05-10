@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>InfoShare – Photo Sharing Platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+  :root{
+    --primary:#6C63FF;
+    --primary-dark:#5548E0;
+    --accent:#FF6584;
+    --bg-dark:#0F0E17;
+    --bg-card:#1A1A2E;
+    --bg-card2:#16213E;
+    --text-main:#FFFFFE;
+    --text-muted:#A7A9BE;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:var(--bg-dark);color:var(--text-main);min-height:100vh;}
+  .font-display{font-family:'Playfair Display',serif;}
+
+  /* Glassmorphism card */
+  .glass{background:rgba(255,255,255,.05);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.1);}
+
+  /* Gradient text */
+  .grad-text{background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+  /* Hero gradient */
+  .hero-bg{background:radial-gradient(ellipse at 20% 50%,rgba(108,99,255,.25) 0%,transparent 60%),
+            radial-gradient(ellipse at 80% 20%,rgba(255,101,132,.2) 0%,transparent 60%),
+            var(--bg-dark);}
+
+  /* Navbar */
+  nav{position:fixed;top:0;width:100%;z-index:50;backdrop-filter:blur(16px);background:rgba(15,14,23,.8);border-bottom:1px solid rgba(255,255,255,.08);}
+
+  /* Buttons */
+  .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border:none;cursor:pointer;transition:all .2s;font-weight:600;}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(108,99,255,.4);}
+  .btn-outline{background:transparent;border:1.5px solid var(--primary);color:var(--primary);cursor:pointer;transition:all .2s;font-weight:600;}
+  .btn-outline:hover{background:var(--primary);color:#fff;}
+
+  /* Photo card */
+  .photo-card{background:var(--bg-card);border-radius:16px;overflow:hidden;transition:transform .3s,box-shadow .3s;cursor:pointer;border:1px solid rgba(255,255,255,.06);}
+  .photo-card:hover{transform:translateY(-6px);box-shadow:0 24px 48px rgba(0,0,0,.4);}
+  .photo-card img{width:100%;height:220px;object-fit:cover;transition:transform .4s;}
+  .photo-card:hover img{transform:scale(1.05);}
+
+  /* Star rating */
+  .star{color:#4A4A6A;font-size:20px;cursor:pointer;transition:color .15s;}
+  .star.active,.star:hover~.star{color:#4A4A6A;}
+  .star-wrap:hover .star,.star-wrap .star.active{color:#FFD700;}
+  .star-wrap .star:hover~.star{color:#4A4A6A;}
+
+  /* Modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;}
+
+  /* Scrollbar */
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-track{background:#0F0E17;}
+  ::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px;}
+
+  /* Input */
+  input,textarea,select{background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);color:var(--text-main);border-radius:10px;padding:10px 14px;width:100%;transition:border-color .2s;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--primary);background:rgba(108,99,255,.1);}
+  input::placeholder,textarea::placeholder{color:var(--text-muted);}
+
+  /* Badge */
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+  .badge-admin{background:rgba(255,101,132,.15);color:var(--accent);border:1px solid rgba(255,101,132,.3);}
+  .badge-consumer{background:rgba(108,99,255,.15);color:var(--primary);border:1px solid rgba(108,99,255,.3);}
+
+  /* Toast */
+  #toast{position:fixed;bottom:24px;right:24px;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;}
+  #toast.show{transform:translateY(0);opacity:1;}
+
+  /* Loader */
+  .loader{display:inline-block;width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* Stat card */
+  .stat-card{background:var(--bg-card);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:24px;text-align:center;}
+
+  /* Search box */
+  #searchInput{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);padding:12px 16px 12px 44px;border-radius:12px;width:100%;max-width:480px;color:#fff;font-size:15px;}
+  #searchInput:focus{border-color:var(--primary);}
+  .search-wrap{position:relative;display:inline-block;}
+  .search-wrap i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);}
+
+  /* Upload zone */
+  #dropZone{border:2px dashed rgba(108,99,255,.4);border-radius:14px;padding:32px;text-align:center;transition:all .2s;cursor:pointer;}
+  #dropZone.drag{border-color:var(--primary);background:rgba(108,99,255,.08);}
+  #dropZone img{max-height:200px;margin:0 auto;border-radius:10px;display:none;}
+
+  /* Section fade-in */
+  .section{animation:fadeIn .4s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<!-- ── NAVBAR ─────────────────────────────────────────────────────────── -->
+<nav class="px-6 py-4">
+  <div class="max-w-7xl mx-auto flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
+        <i class="fa-solid fa-camera text-white text-sm"></i>
+      </div>
+      <span class="font-display text-xl font-bold grad-text">InfoShare</span>
+    </div>
+    <div class="flex items-center gap-3" id="navActions">
+      <button onclick="showSection('gallery')" class="text-sm text-gray-400 hover:text-white transition px-3 py-1">Gallery</button>
+      <button onclick="showSection('auth')" class="btn-primary px-5 py-2 rounded-xl text-sm">Sign In</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO ───────────────────────────────────────────────────────────── -->
+<section id="heroSection" class="hero-bg pt-32 pb-20 px-6">
+  <div class="max-w-4xl mx-auto text-center">
+    <span class="badge badge-admin mb-4 text-xs">☁️ Cloud-Native · Azure · FastAPI</span>
+    <h1 class="font-display text-5xl md:text-7xl font-bold mb-6 leading-tight">
+      Share Your <span class="grad-text">World</span><br/>In Every Frame
+    </h1>
+    <p class="text-gray-400 text-lg md:text-xl mb-10 max-w-2xl mx-auto">
+      A scalable, cloud-native photo sharing platform built on Azure. Discover, rate, and discuss stunning photography.
+    </p>
+    <div class="flex flex-wrap gap-4 justify-center">
+      <button onclick="showSection('gallery')" class="btn-primary px-8 py-3 rounded-xl text-base">
+        <i class="fa-solid fa-images mr-2"></i>Explore Photos
+      </button>
+      <button onclick="showSection('auth')" class="btn-outline px-8 py-3 rounded-xl text-base">
+        <i class="fa-solid fa-user-plus mr-2"></i>Join Free
+      </button>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16" id="statsBar">
+      <div class="stat-card"><div class="text-3xl font-bold grad-text" id="sTotalPhotos">—</div><div class="text-xs text-gray-500 mt-1">Photos Shared</div></div>
+      <div class="stat-card"><div class="text-3xl font-bold grad-text" id="sTotalUsers">—</div><div class="text-xs text-gray-500 mt-1">Members</div></div>
+      <div class="stat-card"><div class="text-3xl font-bold grad-text" id="sTotalViews">—</div><div class="text-xs text-gray-500 mt-1">Total Views</div></div>
+      <div class="stat-card"><div class="text-3xl font-bold grad-text" id="sTotalComments">—</div><div class="text-xs text-gray-500 mt-1">Comments</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── GALLERY SECTION ────────────────────────────────────────────────── -->
+<section id="gallerySection" class="hidden section max-w-7xl mx-auto px-6 pt-28 pb-16">
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+    <h2 class="font-display text-3xl font-bold">Photo <span class="grad-text">Gallery</span></h2>
+    <div class="search-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input id="searchInput" type="text" placeholder="Search by title, location, people…" oninput="debounceSearch(this.value)"/>
+    </div>
+  </div>
+  <div id="photoGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"></div>
+  <div class="text-center mt-10">
+    <button id="loadMoreBtn" onclick="loadMore()" class="btn-outline px-8 py-3 rounded-xl hidden">Load More</button>
+  </div>
+  <div id="noResults" class="hidden text-center py-20">
+    <i class="fa-solid fa-image-slash text-5xl text-gray-700 mb-4"></i>
+    <p class="text-gray-500 text-lg">No photos found.</p>
+  </div>
+</section>
+
+<!-- ── AUTH SECTION ───────────────────────────────────────────────────── -->
+<section id="authSection" class="hidden section flex items-center justify-center min-h-screen pt-20 pb-10 px-4">
+  <div class="glass rounded-2xl p-8 w-full max-w-md">
+    <!-- Tabs -->
+    <div class="flex mb-6 bg-black bg-opacity-30 rounded-xl p-1">
+      <button id="tabLogin" onclick="switchTab('login')" class="flex-1 py-2 rounded-lg text-sm font-semibold transition bg-purple-600 text-white">Sign In</button>
+      <button id="tabRegister" onclick="switchTab('register')" class="flex-1 py-2 rounded-lg text-sm font-semibold transition text-gray-400">Register</button>
+    </div>
+
+    <!-- Login -->
+    <div id="loginForm">
+      <h3 class="font-display text-2xl font-bold mb-6">Welcome back</h3>
+      <div class="space-y-4">
+        <input id="loginUser" type="text" placeholder="Username"/>
+        <input id="loginPass" type="password" placeholder="Password"/>
+        <button onclick="doLogin()" class="btn-primary w-full py-3 rounded-xl">Sign In</button>
+      </div>
+      <p class="text-gray-500 text-xs text-center mt-4">Don't have an account? <button onclick="switchTab('register')" class="text-purple-400 hover:underline">Register</button></p>
+    </div>
+
+    <!-- Register -->
+    <div id="registerForm" class="hidden">
+      <h3 class="font-display text-2xl font-bold mb-6">Create Account</h3>
+      <div class="space-y-4">
+        <input id="regUser" type="text" placeholder="Username"/>
+        <input id="regEmail" type="email" placeholder="Email"/>
+        <input id="regPass" type="password" placeholder="Password"/>
+        <button onclick="doRegister()" class="btn-primary w-full py-3 rounded-xl">Create Account</button>
+      </div>
+      <p class="text-gray-500 text-xs text-center mt-4">Already have an account? <button onclick="switchTab('login')" class="text-purple-400 hover:underline">Sign In</button></p>
+    </div>
+  </div>
+</section>
+
+<!-- ── ADMIN DASHBOARD ────────────────────────────────────────────────── -->
+<section id="adminSection" class="hidden section max-w-5xl mx-auto px-6 pt-28 pb-16">
+  <h2 class="font-display text-3xl font-bold mb-8">Admin <span class="grad-text">Dashboard</span></h2>
+
+  <!-- Upload card -->
+  <div class="glass rounded-2xl p-8 mb-8">
+    <h3 class="text-xl font-semibold mb-6 flex items-center gap-2"><i class="fa-solid fa-cloud-arrow-up text-purple-400"></i> Upload Photo</h3>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="space-y-4">
+        <input id="upTitle" type="text" placeholder="Title *"/>
+        <input id="upCaption" type="text" placeholder="Caption"/>
+        <input id="upLocation" type="text" placeholder="Location"/>
+        <input id="upPeople" type="text" placeholder="People present (comma-separated)"/>
+        <button onclick="uploadPhoto()" class="btn-primary w-full py-3 rounded-xl">
+          <i class="fa-solid fa-upload mr-2"></i>Upload Photo
+        </button>
+      </div>
+      <div>
+        <div id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+          <i class="fa-solid fa-cloud-arrow-up text-4xl text-purple-400 mb-3"></i>
+          <p class="text-gray-400 text-sm mb-1">Drop image here or click to browse</p>
+          <p class="text-gray-600 text-xs">JPG, PNG, GIF, WEBP · Max 16 MB</p>
+          <img id="previewImg"/>
+          <input id="fileInput" type="file" accept="image/*" class="hidden" onchange="previewFile(this)"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage photos -->
+  <div class="glass rounded-2xl p-8">
+    <h3 class="text-xl font-semibold mb-6 flex items-center gap-2"><i class="fa-solid fa-photo-film text-purple-400"></i> Manage Photos</h3>
+    <div id="adminPhotoList" class="space-y-3"></div>
+  </div>
+</section>
+
+<!-- ── PHOTO MODAL ────────────────────────────────────────────────────── -->
+<div id="photoModal" class="modal-overlay hidden" onclick="closeModal(event)">
+  <div class="glass rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="grid md:grid-cols-2">
+      <div class="relative">
+        <img id="modalImg" class="w-full h-full object-cover" style="max-height:520px;border-radius:16px 0 0 0;"/>
+        <button onclick="document.getElementById('photoModal').classList.add('hidden')" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black bg-opacity-60 flex items-center justify-center text-white hover:bg-opacity-90 md:hidden">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+      <div class="p-6 flex flex-col gap-4">
+        <div class="flex justify-between items-start">
+          <div>
+            <h3 id="modalTitle" class="font-display text-2xl font-bold"></h3>
+            <p id="modalUploader" class="text-gray-500 text-sm mt-1"></p>
+          </div>
+          <button onclick="document.getElementById('photoModal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-white bg-opacity-10 flex items-center justify-center hover:bg-opacity-20 hidden md:flex">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div class="bg-black bg-opacity-20 rounded-lg p-3">
+            <p class="text-gray-500 text-xs mb-1"><i class="fa-solid fa-eye mr-1"></i>Views</p>
+            <p id="modalViews" class="font-semibold"></p>
+          </div>
+          <div class="bg-black bg-opacity-20 rounded-lg p-3">
+            <p class="text-gray-500 text-xs mb-1"><i class="fa-solid fa-star mr-1 text-yellow-400"></i>Rating</p>
+            <p id="modalRating" class="font-semibold"></p>
+          </div>
+          <div class="bg-black bg-opacity-20 rounded-lg p-3">
+            <p class="text-gray-500 text-xs mb-1"><i class="fa-solid fa-location-dot mr-1 text-red-400"></i>Location</p>
+            <p id="modalLocation" class="font-semibold"></p>
+          </div>
+          <div class="bg-black bg-opacity-20 rounded-lg p-3">
+            <p class="text-gray-500 text-xs mb-1"><i class="fa-solid fa-users mr-1 text-blue-400"></i>People</p>
+            <p id="modalPeople" class="font-semibold"></p>
+          </div>
+        </div>
+
+        <p id="modalCaption" class="text-gray-400 text-sm"></p>
+
+        <!-- Rate -->
+        <div id="rateSection" class="hidden">
+          <p class="text-xs text-gray-500 mb-2">Your rating:</p>
+          <div class="star-wrap flex gap-1" id="starWrap"></div>
+        </div>
+
+        <!-- Comments -->
+        <div class="flex-1">
+          <h4 class="text-sm font-semibold mb-3 text-gray-300">Comments</h4>
+          <div id="modalComments" class="space-y-2 max-h-40 overflow-y-auto pr-1"></div>
+          <div id="addCommentBox" class="hidden mt-3 flex gap-2">
+            <input id="commentInput" type="text" placeholder="Add a comment…" class="flex-1 text-sm py-2"/>
+            <button onclick="submitComment()" class="btn-primary px-4 py-2 rounded-lg text-sm">Post</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ──────────────────────────────────────────────────────────── -->
+<div id="toast" class="glass rounded-xl px-5 py-3 text-sm font-medium flex items-center gap-3">
+  <i id="toastIcon" class="fa-solid fa-circle-check text-green-400"></i>
+  <span id="toastMsg">Message</span>
+</div>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────────────── -->
+<footer class="border-t border-white border-opacity-5 mt-20 py-8 text-center text-gray-600 text-sm">
+  <p>InfoShare © 2026 · COM769 Scalable Advanced Software Systems · Ulster University</p>
+  <p class="mt-1 text-xs">Built with FastAPI · Azure SQL · Azure Blob Storage · GitHub Actions CI/CD</p>
+</footer>
+
+<script>
+// ── Config ─────────────────────────────────────────────────────────────────
+const API = 'http://localhost:8000'; // Change to your Azure Web App URL in production
+
+let token    = localStorage.getItem('is_token') || '';
+let userRole = localStorage.getItem('is_role')  || '';
+let currentPhotoId = null;
+let currentPage    = 1;
+let searchQuery    = '';
+let searchTimer    = null;
+
+// ── Init ───────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  updateNav();
+  loadStats();
+  if (token) {
+    userRole === 'admin' ? showSection('admin') : showSection('gallery');
+  }
+});
+
+// ── Nav ────────────────────────────────────────────────────────────────────
+function updateNav() {
+  const el = document.getElementById('navActions');
+  if (token) {
+    el.innerHTML = `
+      <span class="badge ${userRole==='admin'?'badge-admin':'badge-consumer'}">${userRole}</span>
+      <button onclick="showSection('gallery')" class="text-sm text-gray-400 hover:text-white px-3 py-1">Gallery</button>
+      ${userRole==='admin'?`<button onclick="showSection('admin')" class="text-sm text-gray-400 hover:text-white px-3 py-1">Dashboard</button>`:''}
+      <button onclick="doLogout()" class="btn-outline px-4 py-2 rounded-xl text-sm">Sign Out</button>`;
+  } else {
+    el.innerHTML = `
+      <button onclick="showSection('gallery')" class="text-sm text-gray-400 hover:text-white px-3 py-1">Gallery</button>
+      <button onclick="showSection('auth')" class="btn-primary px-5 py-2 rounded-xl text-sm">Sign In</button>`;
+  }
+}
+
+// ── Section switching ──────────────────────────────────────────────────────
+function showSection(name) {
+  ['hero','gallery','auth','admin'].forEach(s => {
+    document.getElementById(s+'Section').classList.add('hidden');
+  });
+  document.getElementById(name+'Section').classList.remove('hidden');
+  if (name === 'gallery') { currentPage=1; loadPhotos(true); }
+  if (name === 'admin')   loadAdminPhotos();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── Auth ───────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('loginForm').classList.toggle('hidden', tab!=='login');
+  document.getElementById('registerForm').classList.toggle('hidden', tab!=='register');
+  document.getElementById('tabLogin').className    = `flex-1 py-2 rounded-lg text-sm font-semibold transition ${tab==='login'?'bg-purple-600 text-white':'text-gray-400'}`;
+  document.getElementById('tabRegister').className = `flex-1 py-2 rounded-lg text-sm font-semibold transition ${tab==='register'?'bg-purple-600 text-white':'text-gray-400'}`;
+}
+
+async function doLogin() {
+  const fd = new FormData();
+  fd.append('username', document.getElementById('loginUser').value);
+  fd.append('password', document.getElementById('loginPass').value);
+  const res = await fetch(`${API}/api/auth/login`, {method:'POST', body:fd});
+  const d   = await res.json();
+  if (!res.ok) return toast(d.detail,'error');
+  token    = d.access_token;
+  userRole = d.role;
+  localStorage.setItem('is_token', token);
+  localStorage.setItem('is_role',  userRole);
+  updateNav();
+  toast(`Signed in as ${userRole}`);
+  userRole === 'admin' ? showSection('admin') : showSection('gallery');
+}
+
+async function doRegister() {
+  const fd = new FormData();
+  fd.append('username', document.getElementById('regUser').value);
+  fd.append('email',    document.getElementById('regEmail').value);
+  fd.append('password', document.getElementById('regPass').value);
+  const res = await fetch(`${API}/api/auth/register`, {method:'POST', body:fd});
+  const d   = await res.json();
+  if (!res.ok) return toast(d.detail,'error');
+  toast('Account created! Please sign in.');
+  switchTab('login');
+}
+
+function doLogout() {
+  token = userRole = '';
+  localStorage.removeItem('is_token');
+  localStorage.removeItem('is_role');
+  updateNav();
+  showSection('hero');
+  toast('Signed out');
+}
+
+// ── Stats ──────────────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const d = await (await fetch(`${API}/api/stats`)).json();
+    document.getElementById('sTotalPhotos').textContent   = d.total_photos;
+    document.getElementById('sTotalUsers').textContent    = d.total_users;
+    document.getElementById('sTotalViews').textContent    = d.total_views;
+    document.getElementById('sTotalComments').textContent = d.total_comments;
+  } catch(e) {}
+}
+
+// ── Gallery ────────────────────────────────────────────────────────────────
+let allPhotos = [];
+
+async function loadPhotos(reset=false) {
+  if (reset) { currentPage=1; allPhotos=[]; document.getElementById('photoGrid').innerHTML=''; }
+  const q   = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : '';
+  const url = `${API}/api/photos?page=${currentPage}&limit=12${q}`;
+  const d   = await (await fetch(url)).json();
+  allPhotos = [...allPhotos, ...d.photos];
+  renderPhotos(d.photos, reset);
+  document.getElementById('loadMoreBtn').classList.toggle('hidden', d.photos.length < 12);
+  document.getElementById('noResults').classList.toggle('hidden', allPhotos.length > 0);
+}
+
+function renderPhotos(photos, reset=false) {
+  const grid = document.getElementById('photoGrid');
+  if (reset) grid.innerHTML = '';
+  photos.forEach(p => {
+    const stars = '★'.repeat(Math.round(p.avg_rating)) + '☆'.repeat(5-Math.round(p.avg_rating));
+    const card  = document.createElement('div');
+    card.className = 'photo-card';
+    card.innerHTML = `
+      <div class="relative overflow-hidden">
+        <img src="${p.thumb_url||p.blob_url}" alt="${p.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x300/1A1A2E/6C63FF?text=No+Image'"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition"></div>
+      </div>
+      <div class="p-4">
+        <h4 class="font-semibold text-sm mb-1 truncate">${p.title}</h4>
+        <div class="flex items-center justify-between text-xs text-gray-500">
+          <span class="text-yellow-400">${stars}</span>
+          <span><i class="fa-solid fa-eye mr-1"></i>${p.view_count}</span>
+        </div>
+        ${p.location?`<p class="text-xs text-gray-600 mt-1 truncate"><i class="fa-solid fa-location-dot mr-1 text-red-400"></i>${p.location}</p>`:''}
+      </div>`;
+    card.onclick = () => openPhoto(p.id);
+    grid.appendChild(card);
+  });
+}
+
+function loadMore() { currentPage++; loadPhotos(false); }
+
+function debounceSearch(v) {
+  clearTimeout(searchTimer);
+  searchQuery = v;
+  searchTimer = setTimeout(() => loadPhotos(true), 400);
+}
+
+// ── Photo Modal ────────────────────────────────────────────────────────────
+async function openPhoto(id) {
+  currentPhotoId = id;
+  const p = await (await fetch(`${API}/api/photos/${id}`)).json();
+
+  document.getElementById('modalImg').src          = p.blob_url;
+  document.getElementById('modalTitle').textContent = p.title;
+  document.getElementById('modalUploader').textContent = `by ${p.uploader} · ${new Date(p.upload_date).toLocaleDateString()}`;
+  document.getElementById('modalViews').textContent  = p.view_count;
+  document.getElementById('modalRating').textContent = `${p.avg_rating} / 5 (${p.rating_count} ratings)`;
+  document.getElementById('modalLocation').textContent = p.location || '—';
+  document.getElementById('modalPeople').textContent   = p.people   || '—';
+  document.getElementById('modalCaption').textContent  = p.caption  || '';
+
+  // Stars
+  const rateSection = document.getElementById('rateSection');
+  if (token) {
+    rateSection.classList.remove('hidden');
+    const sw = document.getElementById('starWrap');
+    sw.innerHTML = '';
+    for (let i=1;i<=5;i++) {
+      const s = document.createElement('span');
+      s.className = 'star fa-solid fa-star';
+      s.dataset.score = i;
+      s.onclick = () => submitRating(i);
+      sw.appendChild(s);
+    }
+    document.getElementById('addCommentBox').classList.remove('hidden');
+  } else {
+    rateSection.classList.add('hidden');
+    document.getElementById('addCommentBox').classList.add('hidden');
+  }
+
+  loadComments(id);
+  document.getElementById('photoModal').classList.remove('hidden');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('photoModal'))
+    document.getElementById('photoModal').classList.add('hidden');
+}
+
+async function loadComments(id) {
+  const comments = await (await fetch(`${API}/api/photos/${id}/comments`)).json();
+  const el = document.getElementById('modalComments');
+  el.innerHTML = comments.length === 0
+    ? '<p class="text-gray-600 text-xs">No comments yet.</p>'
+    : comments.map(c=>`
+        <div class="bg-black bg-opacity-20 rounded-lg px-3 py-2">
+          <p class="text-xs font-semibold text-purple-300">${c.username} <span class="text-gray-600 font-normal">${new Date(c.created_at).toLocaleDateString()}</span></p>
+          <p class="text-sm text-gray-300 mt-0.5">${c.content}</p>
+        </div>`).join('');
+}
+
+async function submitComment() {
+  const content = document.getElementById('commentInput').value.trim();
+  if (!content) return;
+  const fd = new FormData(); fd.append('content', content);
+  const res = await fetch(`${API}/api/photos/${currentPhotoId}/comments`, {
+    method:'POST', headers:{Authorization:`Bearer ${token}`}, body:fd
+  });
+  if (!res.ok) return toast('Sign in to comment','error');
+  document.getElementById('commentInput').value = '';
+  loadComments(currentPhotoId);
+  toast('Comment added');
+}
+
+async function submitRating(score) {
+  const fd = new FormData(); fd.append('score', score);
+  await fetch(`${API}/api/photos/${currentPhotoId}/rate`, {
+    method:'POST', headers:{Authorization:`Bearer ${token}`}, body:fd
+  });
+  // highlight stars
+  document.querySelectorAll('#starWrap .star').forEach((s,i) => {
+    s.style.color = i < score ? '#FFD700' : '#4A4A6A';
+  });
+  toast('Rating saved!');
+}
+
+// ── Admin ──────────────────────────────────────────────────────────────────
+function previewFile(input) {
+  if (!input.files[0]) return;
+  const url = URL.createObjectURL(input.files[0]);
+  const img = document.getElementById('previewImg');
+  img.src   = url;
+  img.style.display = 'block';
+  document.querySelector('#dropZone i').style.display   = 'none';
+  document.querySelectorAll('#dropZone p').forEach(p=>p.style.display='none');
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  document.getElementById('fileInput').files = dt.files;
+  previewFile(document.getElementById('fileInput'));
+}
+
+async function uploadPhoto() {
+  const file = document.getElementById('fileInput').files[0];
+  if (!file) return toast('Please select an image','error');
+  const title = document.getElementById('upTitle').value.trim();
+  if (!title) return toast('Title is required','error');
+
+  const fd = new FormData();
+  fd.append('file',     file);
+  fd.append('title',    title);
+  fd.append('caption',  document.getElementById('upCaption').value);
+  fd.append('location', document.getElementById('upLocation').value);
+  fd.append('people',   document.getElementById('upPeople').value);
+
+  const btn = document.querySelector('#adminSection .btn-primary');
+  btn.innerHTML = '<span class="loader"></span> Uploading…';
+  btn.disabled = true;
+
+  const res = await fetch(`${API}/api/photos/upload`, {
+    method:'POST', headers:{Authorization:`Bearer ${token}`}, body:fd
+  });
+  const d = await res.json();
+  btn.innerHTML = '<i class="fa-solid fa-upload mr-2"></i>Upload Photo';
+  btn.disabled  = false;
+
+  if (!res.ok) return toast(d.detail,'error');
+  toast('Photo uploaded successfully!');
+  ['upTitle','upCaption','upLocation','upPeople'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('previewImg').style.display='none';
+  document.getElementById('fileInput').value='';
+  loadAdminPhotos();
+  loadStats();
+}
+
+async function loadAdminPhotos() {
+  const d   = await (await fetch(`${API}/api/photos?limit=50`)).json();
+  const el  = document.getElementById('adminPhotoList');
+  el.innerHTML = d.photos.length === 0 ? '<p class="text-gray-500 text-sm">No photos yet.</p>'
+    : d.photos.map(p=>`
+        <div class="flex items-center gap-4 bg-black bg-opacity-20 rounded-xl p-3">
+          <img src="${p.thumb_url||p.blob_url}" class="w-14 h-14 rounded-lg object-cover" onerror="this.src='https://via.placeholder.com/56'"/>
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-sm truncate">${p.title}</p>
+            <p class="text-xs text-gray-500">${p.location||''} · ${p.view_count} views · ★ ${p.avg_rating}</p>
+          </div>
+          <button onclick="deletePhoto('${p.id}')" class="text-red-400 hover:text-red-300 text-sm px-3 py-1 rounded-lg hover:bg-red-400 hover:bg-opacity-10 transition">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>`).join('');
+}
+
+async function deletePhoto(id) {
+  if (!confirm('Delete this photo?')) return;
+  const res = await fetch(`${API}/api/photos/${id}`, {
+    method:'DELETE', headers:{Authorization:`Bearer ${token}`}
+  });
+  if (!res.ok) { const d=await res.json(); return toast(d.detail,'error'); }
+  toast('Photo deleted');
+  loadAdminPhotos(); loadStats();
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const t  = document.getElementById('toast');
+  const ic = document.getElementById('toastIcon');
+  document.getElementById('toastMsg').textContent = msg;
+  ic.className = type==='error' ? 'fa-solid fa-circle-exclamation text-red-400' : 'fa-solid fa-circle-check text-green-400';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
